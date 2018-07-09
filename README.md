@@ -20,8 +20,12 @@
        `=----'        `\8`\--------'""`-. \ `
 ``` 
 
-_usage:_  
+### _usage:_ ### 
 ``wee_sam.py { --bam file.bam OR --sam file.sam } --out output.txt `` 
+
+### _compiled zip usage:_ ###   
+_the .zip contains all the required modules so should run on any system with python3 installed_  
+``python3 weesam.zip { --bam file.bam OR --sam file.sam } --out output.txt ``   
 
 _command line options:_   
 `--bam` : The input bam file.  
@@ -44,4 +48,5 @@ _File output fields:_
 `Above_1_Depth` : Percentage of sites which are above Avg_Depth.  
 `Above_1.8_Depth` : Percentage of sites which have greater than 1.8 * Avg_Depth.  
 `Variation_Coefficient` : The mean of Std_Dev of the mean.  
+
 
