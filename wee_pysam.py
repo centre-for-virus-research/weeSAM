@@ -187,10 +187,10 @@ if args.bam:
     #'''
     #Open a file, called whatever the user specified and print to it.
     #'''
-    sys.stdout = open(args.out, "w")
+    out_file = open(args.out, "w")
     # Print the file headers
     print("Ref_Name\tRef_Len\tMapped_Reads\tBreadth\t%_Covered\tMin_Depth\tMax_Depth\tAvg_Depth\t"
-          "Std_Dev\tAbove_0.2_Depth\tAbove_0.5_Depth\tAbove_1_Depth\tAbove_1.8_Depth\tVariation_Coefficient")
+          "Std_Dev\tAbove_0.2_Depth\tAbove_0.5_Depth\tAbove_1_Depth\tAbove_1.8_Depth\tVariation_Coefficient", file=out_file)
     for i in stat_dict:
         print("Processing:\t"+str(i)+"\t....")
         # Print contig / seq name   ref len     reads mapped
@@ -211,4 +211,4 @@ if args.bam:
         #       sites above 1.8 mean coverage.
         "%.2f"%(sum(eighteen_dict[i])/int(stat_dict[i][0])*100)+"\t"+
         # Print the variation coefficient
-        "%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i])))
+        "%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i])), file=out_file)
