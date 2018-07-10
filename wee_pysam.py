@@ -18,8 +18,12 @@ import argparse
 import pysam
 import os
 import csv
-import sys
 import statistics
+import matplotlib
+matplotlib.use('agg')
+from matplotlib import pyplot as plt
+
+
 
 #'''
 # Make argparse variables for:
@@ -60,6 +64,17 @@ if args.cutoff is None:
 else:
     args.cutoff = int(args.cutoff)
 
+#'''
+#A function which plots a line graph based on an input list and a title. The funciton returns the plot.
+#'''
+def my_plot(lst, name):
+    fig = plt.figure(figsize=(8,6))
+    plt.plot(lst)
+    plt.xlabel("Position")
+    plt.ylabel("Depth of coverage")
+    plt.title(name)
+
+    return fig
 
 #'''
 # If a user has given a sam file sort it and call it their input minus .sam plus .bam
@@ -186,29 +201,121 @@ if args.bam:
 
     #'''
     #Open a file, called whatever the user specified and print to it.
+    #Open a html file if args.plot is given to argparse
     #'''
     out_file = open(args.out, "w")
+    if args.out:
+        html_file = open(args.out.split(".")[0]+".html","w")
+        html_list = []
+
     # Print the file headers
     print("Ref_Name\tRef_Len\tMapped_Reads\tBreadth\t%_Covered\tMin_Depth\tMax_Depth\tAvg_Depth\t"
           "Std_Dev\tAbove_0.2_Depth\tAbove_0.5_Depth\tAbove_1_Depth\tAbove_1.8_Depth\tVariation_Coefficient", file=out_file)
     for i in stat_dict:
         print("Processing:\t"+str(i)+"\t....")
-        # Print contig / seq name   ref len     reads mapped
-        print(str(i)+"\t"+str(stat_dict[i][0])+"\t"+str(stat_dict[i][1])+"\t"+
-        # Print the breadth and the percentage covered
-        str(sum(percent_dict[i]))+"\t"+str(int(sum(percent_dict[i])/int(stat_dict[i][0])*100))
-        # Print the minimum and maximum depth values for each seq / contig
-        +"\t"+str(min(min_dict[i]))+"\t"+str(max(min_dict[i]))+
-        # Print the mean value of depth for each seq / contig to two dp and the std devitaton
-        "\t"+"%.2f"%(statistics.mean(min_dict[i]))+"\t"+"%.2f"%(statistics.stdev(min_dict[i]))+"\t"+
-        # Print the % of sites which meet the criteria specified to two dp
-        #       sites above 0.2 mean coverage
-        "%.2f"%(sum(two_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-        #       sites above 0.5 mean coverage
-        "%.2f"%(sum(five_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-        #       sites above mean coverage
-        "%.2f"%(sum(one_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-        #       sites above 1.8 mean coverage.
-        "%.2f"%(sum(eighteen_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-        # Print the variation coefficient
-        "%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i])), file=out_file)
+        if args.plot:
+            fig = my_plot(min_dict[i], i)
+            fig.savefig(str(i) + ".svg", format="svg")
+            html_list.append("""
+            <tr>
+                <td><a href={image}>{ref_name}</a></td>
+                <td>{ref_len}</td>
+                <td>{mapped_reads}</td>
+                <td>{breadth}</td>
+                <td>{covered}</td>
+                <td>{min}</td>
+                <td>{max}</td>
+                <td>{avg}</td>
+                <td>{stdev}</td>
+                <td>{point2}</td>
+                <td>{point5}</td>
+                <td>{one}</td>
+                <td>{one_eight}</td>
+                <td>{var_co}</td>
+            </tr>
+            """.format(image=str(i)+".svg", ref_name=str(i), ref_len=str(stat_dict[i][0]),
+                       mapped_reads=str(stat_dict[i][1]),
+                       breadth=str(sum(percent_dict[i])),
+                       covered=str(sum(percent_dict[i])/int(stat_dict[i][0])*100),
+                       min=str(min(min_dict[i])), max=str(max(min_dict[i])),
+                       avg="%.2f"%(statistics.mean(min_dict[i])),
+                       stdev="%.2f"%(statistics.stdev(min_dict[i])),
+                       point2="%.2f"%(sum(two_dict[i])/int(stat_dict[i][0])*100),
+                       point5="%.2f"%(sum(five_dict[i])/int(stat_dict[i][0])*100),
+                       one="%.2f"%(sum(one_dict[i])/int(stat_dict[i][0])*100),
+                       one_eight="%.2f"%(sum(eighteen_dict[i])/int(stat_dict[i][0])*100),
+                       var_co="%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i]))))
+
+        if args.out:
+            # Print contig / seq name   ref len     reads mapped
+            print(str(i)+"\t"+str(stat_dict[i][0])+"\t"+str(stat_dict[i][1])+"\t"+
+            # Print the breadth and the percentage covered
+            str(sum(percent_dict[i]))+"\t"+str(int(sum(percent_dict[i])/int(stat_dict[i][0])*100))
+            # Print the minimum and maximum depth values for each seq / contig
+            +"\t"+str(min(min_dict[i]))+"\t"+str(max(min_dict[i]))+
+            # Print the mean value of depth for each seq / contig to two dp and the std devitaton
+            "\t"+"%.2f"%(statistics.mean(min_dict[i]))+"\t"+"%.2f"%(statistics.stdev(min_dict[i]))+"\t"+
+            # Print the % of sites which meet the criteria specified to two dp
+            #       sites above 0.2 mean coverage
+            "%.2f"%(sum(two_dict[i])/int(stat_dict[i][0])*100)+"\t"+
+            #       sites above 0.5 mean coverage
+            "%.2f"%(sum(five_dict[i])/int(stat_dict[i][0])*100)+"\t"+
+            #       sites above mean coverage
+            "%.2f"%(sum(one_dict[i])/int(stat_dict[i][0])*100)+"\t"+
+            #       sites above 1.8 mean coverage.
+            "%.2f"%(sum(eighteen_dict[i])/int(stat_dict[i][0])*100)+"\t"+
+            # Print the variation coefficient
+            "%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i])),file=out_file)
+
+html_str = """
+<!doctype html>
+<html>
+<head>
+<style>
+table {{
+    font-family: arial;
+    border-collapse: collapse;
+    width: 100%;
+}}
+
+td, th {{
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}}
+
+tr:nth-child(even) {{
+    background-color: #dddddd;
+}}
+
+</style>
+</head>
+<body>
+
+<h2>{title}</h2>     
+
+<table>
+    <tr>
+        <th>Ref_Name</th>
+        <th>Ref_Len</th>
+        <th>Mapped_Reads</th>
+        <th>Breadth</th>
+        <th>%_Covered</th>
+        <th>Min_Depth</th>
+        <th>Max_Depth</th>
+        <th>Avg_Depth</th>
+        <th>Std_Dev</th>
+        <th>Above_0.2_Depth</th>
+        <th>Above_0.5_Depth</th>
+        <th>Above_1_Depth</th>
+        <th>Above_1.8_Depth</th>
+        <th>Variation_Coefficient</th>
+    </tr> 
+
+"""
+
+html_str = html_str.format(title="weeSAM output for file:\t"+str(args.bam))
+html_file.write(html_str)
+for i in html_list:
+    print(i, file=html_file)
+html_file.write("\t</table>\n</body>")
