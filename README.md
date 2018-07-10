@@ -25,9 +25,9 @@
 ### _usage:_ ### 
 ``wee_sam.py { --bam file.bam OR --sam file.sam } --out output.txt `` 
 
-### _compiled zip usage:_ ###   
-_the .zip contains all the required modules so should run on any system with python3 installed_  
-``python3 weesam.zip { --bam file.bam OR --sam file.sam } --out output.txt ``   
+### _Script with packages (weeSAMv1.5) usage:_ ###   
+_This script contains all the required modules so should run on any system with python3 installed_  
+``python3 weeSAMv1.5 { --bam file.bam OR --sam file.sam } --out output.txt ``   
 
 _command line options:_   
 `--bam` : The input bam file.  
