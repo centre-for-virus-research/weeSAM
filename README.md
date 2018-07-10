@@ -30,9 +30,10 @@ _This script contains all the required modules so should run on any system with 
 ``python3 weeSAMv1.5 { --bam file.bam OR --sam file.sam } --out output.txt ``   
 
 _command line options:_   
-`--bam` : The input bam file.  
-`--sam` : The input sam file.  
-`--out` : The name of your output file.  
+`--bam` : The input bam file. [file.bam]   
+`--sam` : The input sam file. [file.sam]   
+`--out` : The name of your output file. [myoutput.txt]     
+`--plot`: Generate coverage plots for each reference sequence. [myplot.txt]   
 `-h`    : Help  
 
 _File output fields:_  
