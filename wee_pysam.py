@@ -64,17 +64,6 @@ if args.cutoff is None:
 else:
     args.cutoff = int(args.cutoff)
 
-#'''
-#A function which plots a line graph based on an input list and a title. The funciton returns the plot.
-#'''
-def my_plot(lst, name):
-    fig = plt.figure(figsize=(8,6))
-    plt.plot(lst)
-    plt.xlabel("Position")
-    plt.ylabel("Depth of coverage")
-    plt.title(name)
-
-    return fig
 
 #'''
 # If a user has given a sam file sort it and call it their input minus .sam plus .bam
@@ -199,14 +188,44 @@ if args.bam:
                 key_2 = two_dict.setdefault(i, [])
                 key_2.append(0)
 
+
+    # '''
+    # A function which plots a line graph based on an input list and a title. The funciton returns the plot.
+    # '''
+    def my_plot(lst, name):
+        fig = plt.figure(figsize=(8, 6))
+        point_2 = []
+        one_eight = []
+        avg = []
+        for i in range(len(lst)):
+            point_2.append(int(avg_dict[name]*0.2))
+            one_eight.append(int(avg_dict[name]*1.8))
+            avg.append(int(avg_dict[name]))
+        plt.plot(lst)
+        plt.plot(point_2, label="Average depth * 0.2")
+        plt.plot(avg, label="Average depth")
+        plt.plot(one_eight, label="Average depth * 1.8")
+        plt.xlabel("Position")
+        plt.ylabel("Depth of coverage")
+        plt.title(name)
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=1,
+                   ncol=3, mode="expand", borderaxespad=0.)
+        return fig
+
     #'''
     #Open a file, called whatever the user specified and print to it.
     #Open a html file if args.plot is given to argparse
     #'''
-    out_file = open(args.out, "w")
     if args.out:
-        html_file = open(args.out.split(".")[0]+".html","w")
+        os.mkdir(str(args.out).split(".")[0] + "_figures")
+        save_path = str(args.out).split(".")[0] + "_figures/"
+        out_file = open(args.out, "w")
+
+    if args.plot:
+
+        html_file = open(str(args.out.split(".")[0])+".html","w")
         html_list = []
+
 
     # Print the file headers
     print("Ref_Name\tRef_Len\tMapped_Reads\tBreadth\t%_Covered\tMin_Depth\tMax_Depth\tAvg_Depth\t"
@@ -215,7 +234,7 @@ if args.bam:
         print("Processing:\t"+str(i)+"\t....")
         if args.plot:
             fig = my_plot(min_dict[i], i)
-            fig.savefig(str(i) + ".svg", format="svg")
+            fig.savefig(str(save_path)+str(i) + ".svg", format="svg")
             html_list.append("""
             <tr>
                 <td><a href={image}>{ref_name}</a></td>
@@ -233,7 +252,7 @@ if args.bam:
                 <td>{one_eight}</td>
                 <td>{var_co}</td>
             </tr>
-            """.format(image=str(i)+".svg", ref_name=str(i), ref_len=str(stat_dict[i][0]),
+            """.format(image=str(save_path)+str(i)+".svg", ref_name=str(i), ref_len=str(stat_dict[i][0]),
                        mapped_reads=str(stat_dict[i][1]),
                        breadth=str(sum(percent_dict[i])),
                        covered=str(sum(percent_dict[i])/int(stat_dict[i][0])*100),
@@ -267,55 +286,56 @@ if args.bam:
             # Print the variation coefficient
             "%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i])),file=out_file)
 
-html_str = """
-<!doctype html>
-<html>
-<head>
-<style>
-table {{
-    font-family: arial;
-    border-collapse: collapse;
-    width: 100%;
-}}
+if args.plot:
+    html_str = """
+    <!doctype html>
+    <html>
+    <head>
+    <style>
+    table {{
+        font-family: arial;
+        border-collapse: collapse;
+        width: 100%;
+    }}
+    
+    td, th {{
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }}
+    
+    tr:nth-child(even) {{
+        background-color: #dddddd;
+    }}
+    
+    </style>
+    </head>
+    <body>
+    
+    <h2>{title}</h2>     
+    
+    <table>
+        <tr>
+            <th>Ref_Name</th>
+            <th>Ref_Len</th>
+            <th>Mapped_Reads</th>
+            <th>Breadth</th>
+            <th>%_Covered</th>
+            <th>Min_Depth</th>
+            <th>Max_Depth</th>
+            <th>Avg_Depth</th>
+            <th>Std_Dev</th>
+            <th>Above_0.2_Depth</th>
+            <th>Above_0.5_Depth</th>
+            <th>Above_1_Depth</th>
+            <th>Above_1.8_Depth</th>
+            <th>Variation_Coefficient</th>
+        </tr> 
+    
+    """
 
-td, th {{
-    border: 1px solid #dddddd;
-    text-align: left;
-    padding: 8px;
-}}
-
-tr:nth-child(even) {{
-    background-color: #dddddd;
-}}
-
-</style>
-</head>
-<body>
-
-<h2>{title}</h2>     
-
-<table>
-    <tr>
-        <th>Ref_Name</th>
-        <th>Ref_Len</th>
-        <th>Mapped_Reads</th>
-        <th>Breadth</th>
-        <th>%_Covered</th>
-        <th>Min_Depth</th>
-        <th>Max_Depth</th>
-        <th>Avg_Depth</th>
-        <th>Std_Dev</th>
-        <th>Above_0.2_Depth</th>
-        <th>Above_0.5_Depth</th>
-        <th>Above_1_Depth</th>
-        <th>Above_1.8_Depth</th>
-        <th>Variation_Coefficient</th>
-    </tr> 
-
-"""
-
-html_str = html_str.format(title="weeSAM output for file:\t"+str(args.bam))
-html_file.write(html_str)
-for i in html_list:
-    print(i, file=html_file)
-html_file.write("\t</table>\n</body>")
+    html_str = html_str.format(title="weeSAM output for file:\t"+str(args.bam))
+    html_file.write(html_str)
+    for i in html_list:
+        print(i, file=html_file)
+    html_file.write("\t</table>\n</body>")
