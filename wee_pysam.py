@@ -384,15 +384,13 @@ tr:nth-child(even) {{
                    one=above_1,
                    one_eight=above_18,
                    var_co=var_coeff)
-            #html_list.append(html_add)
 
             # Write this html string to the new files in the directory
             html_new = """
-<!doctype html>
         <img src={image} alt={image_man}>
             """.format(image=ref_name+".svg", image_man=ref_name)
 
-            open(save_path + str(i) + ".html", "w").write(html_new + html_str + html_end)
+            open(save_path + str(i) + ".html", "w").write(html_str + html_new + html_end )
 
 
         if args.out:
