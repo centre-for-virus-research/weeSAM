@@ -292,7 +292,7 @@ tr:nth-child(even) {{
         ref_len = str(stat_dict[i][0])
         mapped_reads = str(stat_dict[i][1])
         breadth = str(sum(percent_dict[i]))
-        covered = "%.2f"%(sum(percent_dict[i])/int(stat_dict[i][0]*100))
+        covered = "%.2f"%(sum(percent_dict[i])/int(stat_dict[i][0])*100)
         minimum = str(min(min_dict[i]))
         maximum = str(max(min_dict[i]))
         average = "%.2f"%(statistics.mean(min_dict[i]))
