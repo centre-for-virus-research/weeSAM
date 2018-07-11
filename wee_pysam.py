@@ -23,8 +23,6 @@ import matplotlib
 matplotlib.use('agg')
 from matplotlib import pyplot as plt
 
-
-
 #'''
 # Make argparse variables for:
 #    -    sam file
@@ -38,8 +36,8 @@ parser = argparse.ArgumentParser(description="A pysam script to produce informat
 parser.add_argument("--sam", help="The input SAM file.")
 parser.add_argument("--bam", help="The input BAM file.")
 parser.add_argument("--cutoff", help="Cut off value for number of mapped reads. [Default = 0]")
-parser.add_argument("--out", help="Output file name.", required=True)
-parser.add_argument("--plot", help="An output file name for the coverage plot. (.pdf)")
+parser.add_argument("--out", help="Output file name.")
+parser.add_argument("--html", help="An output file name for the html. (.html)")
 args = parser.parse_args()
 
 #'''
@@ -54,6 +52,10 @@ if args.sam is None and args.bam is None:
 elif args.sam and args.bam:
     print("You've specified both a sam and bam file, you can only specify one."
         " Please use either\n\t--sam `file.sam`\n\tOR\n\t--bam`file.bam`")
+    exit(1)
+# Check if either a plot or output is specified
+if args.html is None and args.out is None:
+    print("You must specify either one or both of the following\n\t--html myfile.html\n\t--out myfile.txt")
     exit(1)
 
 #'''
@@ -217,103 +219,43 @@ if args.bam:
     #Open a html file if args.plot is given to argparse
     #'''
     if args.out:
-        os.mkdir(str(args.out).split(".")[0] + "_figures")
-        save_path = str(args.out).split(".")[0] + "_figures/"
         out_file = open(args.out, "w")
 
-    if args.plot:
-
-        html_file = open(str(args.out.split(".")[0])+".html","w")
+    if args.html:
+        directory = str(args.html).split(".")[0]+"_html_results"
+        os.mkdir(directory)
+        os.mkdir(directory+"/"+str(args.html).split(".")[0] + "_figures")
+        save_path = directory+"/"+str(args.html).split(".")[0] + "_figures/"
+        html_file = open(directory+"/"+str(args.html).split(".")[0]+".html","w")
         html_list = []
+        html_header_list = []
+        if args.html:
+            html_str = """
+<html>
+<head>
+<style>
+table {{
+    font-family: arial;
+    border-collapse: collapse;
+    width: 100%;
+}}
 
+td, th {{
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}}
 
-    # Print the file headers
-    print("Ref_Name\tRef_Len\tMapped_Reads\tBreadth\t%_Covered\tMin_Depth\tMax_Depth\tAvg_Depth\t"
-          "Std_Dev\tAbove_0.2_Depth\tAbove_0.5_Depth\tAbove_1_Depth\tAbove_1.8_Depth\tVariation_Coefficient", file=out_file)
-    for i in stat_dict:
-        print("Processing:\t"+str(i)+"\t....")
-        if args.plot:
-            fig = my_plot(min_dict[i], i)
-            fig.savefig(str(save_path)+str(i) + ".svg", format="svg")
-            html_list.append("""
-            <tr>
-                <td><a href={image}>{ref_name}</a></td>
-                <td>{ref_len}</td>
-                <td>{mapped_reads}</td>
-                <td>{breadth}</td>
-                <td>{covered}</td>
-                <td>{min}</td>
-                <td>{max}</td>
-                <td>{avg}</td>
-                <td>{stdev}</td>
-                <td>{point2}</td>
-                <td>{point5}</td>
-                <td>{one}</td>
-                <td>{one_eight}</td>
-                <td>{var_co}</td>
-            </tr>
-            """.format(image=str(save_path)+str(i)+".svg", ref_name=str(i), ref_len=str(stat_dict[i][0]),
-                       mapped_reads=str(stat_dict[i][1]),
-                       breadth=str(sum(percent_dict[i])),
-                       covered=str(sum(percent_dict[i])/int(stat_dict[i][0])*100),
-                       min=str(min(min_dict[i])), max=str(max(min_dict[i])),
-                       avg="%.2f"%(statistics.mean(min_dict[i])),
-                       stdev="%.2f"%(statistics.stdev(min_dict[i])),
-                       point2="%.2f"%(sum(two_dict[i])/int(stat_dict[i][0])*100),
-                       point5="%.2f"%(sum(five_dict[i])/int(stat_dict[i][0])*100),
-                       one="%.2f"%(sum(one_dict[i])/int(stat_dict[i][0])*100),
-                       one_eight="%.2f"%(sum(eighteen_dict[i])/int(stat_dict[i][0])*100),
-                       var_co="%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i]))))
+tr:nth-child(even) {{
+    background-color: #dddddd;
+}}
 
-        if args.out:
-            # Print contig / seq name   ref len     reads mapped
-            print(str(i)+"\t"+str(stat_dict[i][0])+"\t"+str(stat_dict[i][1])+"\t"+
-            # Print the breadth and the percentage covered
-            str(sum(percent_dict[i]))+"\t"+str(int(sum(percent_dict[i])/int(stat_dict[i][0])*100))
-            # Print the minimum and maximum depth values for each seq / contig
-            +"\t"+str(min(min_dict[i]))+"\t"+str(max(min_dict[i]))+
-            # Print the mean value of depth for each seq / contig to two dp and the std devitaton
-            "\t"+"%.2f"%(statistics.mean(min_dict[i]))+"\t"+"%.2f"%(statistics.stdev(min_dict[i]))+"\t"+
-            # Print the % of sites which meet the criteria specified to two dp
-            #       sites above 0.2 mean coverage
-            "%.2f"%(sum(two_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-            #       sites above 0.5 mean coverage
-            "%.2f"%(sum(five_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-            #       sites above mean coverage
-            "%.2f"%(sum(one_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-            #       sites above 1.8 mean coverage.
-            "%.2f"%(sum(eighteen_dict[i])/int(stat_dict[i][0])*100)+"\t"+
-            # Print the variation coefficient
-            "%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i])),file=out_file)
+</style>
+</head>
+<body>
 
-if args.plot:
-    html_str = """
-    <!doctype html>
-    <html>
-    <head>
-    <style>
-    table {{
-        font-family: arial;
-        border-collapse: collapse;
-        width: 100%;
-    }}
-    
-    td, th {{
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-    }}
-    
-    tr:nth-child(even) {{
-        background-color: #dddddd;
-    }}
-    
-    </style>
-    </head>
-    <body>
-    
     <h2>{title}</h2>     
-    
+
     <table>
         <tr>
             <th>Ref_Name</th>
@@ -331,11 +273,141 @@ if args.plot:
             <th>Above_1.8_Depth</th>
             <th>Variation_Coefficient</th>
         </tr> 
-    
-    """
+        """
 
-    html_str = html_str.format(title="weeSAM output for file:\t"+str(args.bam))
-    html_file.write(html_str)
-    for i in html_list:
-        print(i, file=html_file)
-    html_file.write("\t</table>\n</body>")
+            html_str = html_str.format(title="weeSAM output for file:\t" + str(args.bam))
+
+    if args.out:
+        # Print the file headers
+        print("Ref_Name\tRef_Len\tMapped_Reads\tBreadth\t%_Covered\tMin_Depth\tMax_Depth\tAvg_Depth\t"
+              "Std_Dev\tAbove_0.2_Depth\tAbove_0.5_Depth\tAbove_1_Depth\tAbove_1.8_Depth\tVariation_Coefficient"
+              , file=out_file)
+    for i in stat_dict:
+        print("Processing:\t"+str(i)+"\t....")
+        #'''
+        #Make variables of all the information which needs printed. These will change for each element in the
+        #dict loop
+        #'''
+        ref_name = str(i)
+        ref_len = str(stat_dict[i][0])
+        mapped_reads = str(stat_dict[i][1])
+        breadth = str(sum(percent_dict[i]))
+        covered = "%.2f"%(sum(percent_dict[i])/int(stat_dict[i][0]*100))
+        minimum = str(min(min_dict[i]))
+        maximum = str(max(min_dict[i]))
+        average = "%.2f"%(statistics.mean(min_dict[i]))
+        standard_dev = "%.2f"%(statistics.stdev(min_dict[i]))
+        above_2 = "%.2f"%(sum(two_dict[i])/int(stat_dict[i][0])*100)
+        above_5 = "%.2f"%(sum(five_dict[i])/int(stat_dict[i][0])*100)
+        above_1 = "%.2f"%(sum(one_dict[i])/int(stat_dict[i][0])*100)
+        above_18 = "%.2f"%(sum(eighteen_dict[i])/int(stat_dict[i][0])*100)
+        var_coeff = "%.2f"%(statistics.stdev(min_dict[i])/statistics.mean(min_dict[i]))
+
+        #'''
+        #If html has been specified make plots and save them in the new html dir which was created.
+        #'''
+        if args.html:
+            fig = my_plot(min_dict[i], i)
+            fig.savefig(str(save_path)+str(i) + ".svg", format="svg")
+            # The html string for the 'index' html. Which contains links to the other html files
+            # in the html directory
+            html_add = """
+    <tr>
+        <td><a href={link}>{ref_name}</a></td>
+        <td>{ref_len}</td>
+        <td>{mapped_reads}</td>
+        <td>{breadth}</td>
+        <td>{covered}</td>
+        <td>{min}</td>
+        <td>{max}</td>
+        <td>{avg}</td>
+        <td>{stdev}</td>
+        <td>{point2}</td>
+        <td>{point5}</td>
+        <td>{one}</td>
+        <td>{one_eight}</td>
+        <td>{var_co}</td>
+    </tr>
+        """.format(link=str(args.html).split(".")[0]+"_figures/"+ref_name+".html", ref_name=ref_name, ref_len=ref_len,
+                   mapped_reads=mapped_reads,
+                   breadth=breadth,
+                   covered=covered,
+                   min=minimum, max=maximum,
+                   avg=average,
+                   stdev=standard_dev,
+                   point2=above_2,
+                   point5=above_5,
+                   one=above_1,
+                   one_eight=above_18,
+                   var_co=var_coeff)
+            html_list.append(html_add)
+
+            #  This could be improved.
+            # We want to write this to the new files. It's the same as the previous string
+            # excpet the hyperlink has been removed
+            html_end = """
+    <tr>
+        <td>{name}</td>
+        <td>{ref_len}</td>
+        <td>{mapped_reads}</td>
+        <td>{breadth}</td>
+        <td>{covered}</td>
+        <td>{min}</td>
+        <td>{max}</td>
+        <td>{avg}</td>
+        <td>{stdev}</td>
+        <td>{point2}</td>
+        <td>{point5}</td>
+        <td>{one}</td>
+        <td>{one_eight}</td>
+        <td>{var_co}</td>
+    </tr>
+        """.format(name=ref_name, ref_len=ref_len,
+                   mapped_reads=mapped_reads,
+                   breadth=breadth,
+                   covered=covered,
+                   min=minimum, max=maximum,
+                   avg=average,
+                   stdev=standard_dev,
+                   point2=above_2,
+                   point5=above_5,
+                   one=above_1,
+                   one_eight=above_18,
+                   var_co=var_coeff)
+            #html_list.append(html_add)
+
+            # Write this html string to the new files in the directory
+            html_new = """
+<!doctype html>
+        <img src={image} alt={image_man}>
+            """.format(image=ref_name+".svg", image_man=ref_name)
+
+            open(save_path + str(i) + ".html", "w").write(html_new + html_str + html_end)
+
+
+        if args.out:
+            # Print contig / seq name   ref len     reads mapped
+            print(ref_name+"\t"+ref_len+"\t"+mapped_reads+"\t"+
+            # Print the breadth and the percentage covered
+            breadth+"\t"+covered +"\t" +
+            # Print the minimum and maximum depth values for each seq / contig
+            minimum+"\t"+maximum+ "\t" +
+            # Print the mean value of depth for each seq / contig to two dp and the std devitaton
+            average+"\t"+standard_dev+"\t"+
+            # Print the % of sites which meet the criteria specified to two dp
+            #       sites above 0.2 mean coverage
+            above_2+"\t"+
+            #       sites above 0.5 mean coverage
+            above_5+"\t"+
+            #       sites above mean coverage
+            above_1+"\t"+
+            #       sites above 1.8 mean coverage.
+            above_18+"\t"+
+            # Print the variation coefficient
+            var_coeff,file=out_file)
+
+    if args.html:
+        html_file.write(html_str)
+        for i in html_list:
+            print(i, file=html_file)
+        html_file.write("\t</table>\n</body>")
