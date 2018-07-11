@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3 -u
+#!/usr/bin/env python3
 #'''
 #wee_pysam is a python (pysam) re-write of weeSAM written by Joseph Hughes.
 #
@@ -20,6 +20,7 @@ import os
 import csv
 import statistics
 import matplotlib
+import shutil
 matplotlib.use('agg')
 from matplotlib import pyplot as plt
 
@@ -37,7 +38,8 @@ parser.add_argument("--sam", help="The input SAM file.")
 parser.add_argument("--bam", help="The input BAM file.")
 parser.add_argument("--cutoff", help="Cut off value for number of mapped reads. [Default = 0]")
 parser.add_argument("--out", help="Output file name.")
-parser.add_argument("--html", help="An output file name for the html. (.html)")
+parser.add_argument("--html", help="An output file name for the coverage plot. (.pdf)")
+parser.add_argument("--overwrite", help="Overwrite the html directory if it already exists.")
 args = parser.parse_args()
 
 #'''
@@ -58,6 +60,14 @@ if args.html is None and args.out is None:
     print("You must specify either one or both of the following\n\t--html myfile.html\n\t--out myfile.txt")
     exit(1)
 
+# Check if the html directory exists in the current wd. If it does check whether the use
+# has overwrite set.
+if os.path.exists(args.html.split(".")[0]+"_html_results"):
+    if args.overwrite:
+        shutil.rmtree(args.html.split(".")[0]+"_html_results", ignore_errors=True)
+    else:
+        print("The html directory already exists. If you want to remove if add\n\t--overwrite")
+        exit(1)
 #'''
 #Check if the user has specified a cutoff value. if not set it to zero.
 #'''
@@ -275,7 +285,7 @@ tr:nth-child(even) {{
         </tr> 
         """
 
-            html_str = html_str.format(title="weeSAM output for file:\t" + str(args.bam))
+            html_str = html_str.format(title="weeSAM output for file:\t" + str(args.bam.rsplit("/")[-1].split(".")[0]))
 
     if args.out:
         # Print the file headers
