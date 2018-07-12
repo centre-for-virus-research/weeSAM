@@ -205,7 +205,7 @@ if args.bam:
     # A function which plots a line graph based on an input list and a title. The funciton returns the plot.
     # '''
     def my_plot(lst, name):
-        fig = plt.figure(figsize=(8, 6))
+        fig = plt.figure(figsize=(16, 5))
         point_2 = []
         one_eight = []
         avg = []
@@ -214,9 +214,9 @@ if args.bam:
             one_eight.append(int(avg_dict[name]*1.8))
             avg.append(int(avg_dict[name]))
         plt.plot(lst)
-        plt.plot(point_2, label="Average depth * 0.2")
-        plt.plot(avg, label="Average depth")
-        plt.plot(one_eight, label="Average depth * 1.8")
+        plt.plot(point_2,linestyle="--", label="Average depth * 0.2")
+        plt.plot(avg, linestyle="--", label="Average depth")
+        plt.plot(one_eight,linestyle="--", label="Average depth * 1.8")
         plt.xlabel("Position")
         plt.ylabel("Depth of coverage")
         plt.title(name)
@@ -266,7 +266,7 @@ tr:nth-child(even) {{
 
     <h2>{title}</h2>     
 
-    <table>
+    <table class="no wrap">
         <tr>
             <th>Ref_Name</th>
             <th>Ref_Len</th>
