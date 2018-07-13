@@ -15,7 +15,8 @@
 #   13/07:
 #	-   Added a version number to argparse.
 #	-   The baby ascii is back!
-#
+#	-   Joseph can't remember when he ever used the read cutoff (args.cutoff)
+#	-   Removed 0.5 * avg depth cols
 #####################################################################################
 
 # Import packages
@@ -86,7 +87,6 @@ if len(sys.argv) == 1:
     Avg_Depth:  Mean read depth observed.
     Std_Dev:    Standard deviation of the mean (Avg_Depth).
     Above_0.2_Depth:    Percentage of sites which have greater than 0.2 * Avg_Depth.
-    Above_0.5_Depth:    Percentage of sites which have greater than 0.5 * Avg_Depth.
     Above_1_Depth:  Percentage of sites which are above Avg_Depth.
     Above_1.8_Depth:    Percentage of sites which have greater than 1.8 * Avg_Depth.
     Variation_Coefficient:  The mean of Std_Dev of the mean.
@@ -334,7 +334,6 @@ tr:nth-child(even) {{
             <th>Avg_Depth</th>
             <th>Std_Dev</th>
             <th>Above_0.2_Depth</th>
-            <th>Above_0.5_Depth</th>
             <th>Above_1_Depth</th>
             <th>Above_1.8_Depth</th>
             <th>Variation_Coefficient</th>
@@ -346,7 +345,7 @@ tr:nth-child(even) {{
     if args.out:
         # Print the file headers
         print("Ref_Name\tRef_Len\tMapped_Reads\tBreadth\t%_Covered\tMin_Depth\tMax_Depth\tAvg_Depth\t"
-              "Std_Dev\tAbove_0.2_Depth\tAbove_0.5_Depth\tAbove_1_Depth\tAbove_1.8_Depth\tVariation_Coefficient"
+              "Std_Dev\tAbove_0.2_Depth\tAbove_1_Depth\tAbove_1.8_Depth\tVariation_Coefficient"
               , file=out_file)
     for i in stat_dict:
         print("Processing:\t"+str(i)+"\t....")
@@ -389,7 +388,6 @@ tr:nth-child(even) {{
         <td>{avg}</td>
         <td>{stdev}</td>
         <td>{point2}</td>
-        <td>{point5}</td>
         <td>{one}</td>
         <td>{one_eight}</td>
         <td>{var_co}</td>
@@ -402,7 +400,6 @@ tr:nth-child(even) {{
                    avg=average,
                    stdev=standard_dev,
                    point2=above_2,
-                   point5=above_5,
                    one=above_1,
                    one_eight=above_18,
                    var_co=var_coeff)
@@ -423,7 +420,6 @@ tr:nth-child(even) {{
             <td>{avg}</td>
             <td>{stdev}</td>
             <td>{point2}</td>
-            <td>{point5}</td>
             <td>{one}</td>
             <td>{one_eight}</td>
             <td>{var_co}</td>
@@ -438,7 +434,6 @@ tr:nth-child(even) {{
                    avg=average,
                    stdev=standard_dev,
                    point2=above_2,
-                   point5=above_5,
                    one=above_1,
                    one_eight=above_18,
                    var_co=var_coeff)
@@ -463,8 +458,6 @@ tr:nth-child(even) {{
             # Print the % of sites which meet the criteria specified to two dp
             #sites above 0.2 mean coverage
             above_2+"\t"+
-            #sites above 0.5 mean coverage
-            above_5+"\t"+
             #sites above mean coverage
             above_1+"\t"+
             #sites above 1.8 mean coverage.
