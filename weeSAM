@@ -12,7 +12,9 @@
 #       -   Added this update tracker.  -   Increased the size of the svg figure
 #       -   Table and body elements are now properly closed off in html section.
 #       -   Help script will now print if no args are supplied to command line.
-#
+#   13/07:
+#	-   Added a version number to argparse.
+#	-   The baby ascii is back!
 #
 #####################################################################################
 
@@ -43,12 +45,34 @@ parser = argparse.ArgumentParser(description="A pysam script to produce informat
 parser.add_argument("--sam", help="The input SAM file.\n")
 parser.add_argument("--bam", help="The input BAM file.\n")
 parser.add_argument("--cutoff", help="Cut off value for number of mapped reads. [Default = 0]\n")
-parser.add_argument("--overwrite", help="Overwrite the html directory if it already exists.\n")
+parser.add_argument("--overwrite", help="Overwrite the html directory if it already exists.\n", action="store_true")
 parser.add_argument("--out", help="Output file name.\n\tProduced file is a tab delimited .txt file "+
                     "which contains the information seen down below\n")
+parser.add_argument("-v", "--version", help="weeSAM version number", action="store_true")
 parser.add_argument("--html", help="What you want the html file to be called. (.html)\n\t"+
                     "Produces html pages with links to images containing coverage plots for each sequence.")
 if len(sys.argv) == 1:
+    print("""
+              _)_
+           .-'(/ '-.
+          /    `    \\
+         /  -     -  \\
+        (`  a     a  `)
+         \     ^     /
+          '. '---' .'
+          .-`'---'`-.
+         /           \\
+        /  / '   ' \  \\
+      _/  /| S A M |\  \_
+     `/|\` |+++++++|`/|\`
+          /\       /\\
+          | `-._.-` |
+          \   / \   /
+          |_ |   | _|
+          | _|   |_ |
+          (ooO   Ooo)
+
+""")
     print(parser.print_help())
     print(
 """
@@ -69,7 +93,9 @@ if len(sys.argv) == 1:
 """)
     exit(1)
 args = parser.parse_args()
-
+if args.version:
+    print("weeSAM is currently on version number:\t1.5\n")
+    exit(1)
 
 #'''
 # Check if a sam or bam has been given to the command line. Only one can be given.
@@ -91,12 +117,13 @@ if args.html is None and args.out is None:
 
 # Check if the html directory exists in the current wd. If it does check whether the use
 # has overwrite set.
-if os.path.exists(args.html.split(".")[0]+"_html_results"):
-    if args.overwrite:
-        shutil.rmtree(args.html.split(".")[0]+"_html_results", ignore_errors=True)
-    else:
-        print("The html directory already exists. If you want to remove if add\n\t--overwrite")
-        exit(1)
+if args.html:
+    if os.path.exists(args.html.split(".")[0]+"_html_results"):
+        if args.overwrite:
+            shutil.rmtree(args.html.split(".")[0]+"_html_results", ignore_errors=True)
+        else:
+            print("The html directory already exists. If you want to remove if add\n\t--overwrite")
+            exit(1)
 #'''
 #Check if the user has specified a cutoff value. if not set it to zero.
 #'''
@@ -314,7 +341,7 @@ tr:nth-child(even) {{
         </tr> 
         """
 
-            html_str = html_str.format(title="weeSAM output for file:\t" + str(args.bam.rsplit("/")[-1].split(".")[0]))
+            html_str = html_str.format(title="weeSAM output for file:\t" + str(args.bam.rsplit("/")[-1]))
 
     if args.out:
         # Print the file headers
