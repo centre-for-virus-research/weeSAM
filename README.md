@@ -46,7 +46,6 @@
 `Avg_Depth` : Mean read depth observed.  
 `Std_Dev` : Standard deviation of the mean (Avg_Depth).  
 `Above_0.2_Depth` : Percentage of sites which have greater than 0.2 * Avg_Depth.  
-`Above_0.5_Depth` : Percentage of sites which have greater than 0.5 * Avg_Depth.  
 `Above_1_Depth` : Percentage of sites which are above Avg_Depth.  
 `Above_1.8_Depth` : Percentage of sites which have greater than 1.8 * Avg_Depth.  
 `Variation_Coefficient` : The mean of Std_Dev of the mean.  
