@@ -17,6 +17,7 @@
 #	-   The baby ascii is back!
 #	-   Joseph can't remember when he ever used the read cutoff (args.cutoff)
 #	-   Removed 0.5 * avg depth cols
+#	-   Customised argparse default help script to show required / not required
 #####################################################################################
 
 # Import packages
@@ -41,8 +42,8 @@ from matplotlib import pyplot as plt
 #    -    out file
 #    -    plot
 #'''
-parser = argparse.ArgumentParser(description="A pysam script to produce information from an "+
-            "input BAM or SAM file.\n",formatter_class=RawTextHelpFormatter)
+parser = argparse.ArgumentParser(description="A script to produce information from an "+
+            "input BAM or SAM file.\n",formatter_class=RawTextHelpFormatter, add_help=False)
 parser.add_argument("--sam", help="The input SAM file.\n")
 parser.add_argument("--bam", help="The input BAM file.\n")
 parser.add_argument("--cutoff", help="Cut off value for number of mapped reads. [Default = 0]\n")
@@ -52,7 +53,18 @@ parser.add_argument("--out", help="Output file name.\n\tProduced file is a tab d
 parser.add_argument("-v", "--version", help="weeSAM version number", action="store_true")
 parser.add_argument("--html", help="What you want the html file to be called. (.html)\n\t"+
                     "Produces html pages with links to images containing coverage plots for each sequence.")
-if len(sys.argv) == 1:
+parser.add_argument("-h","--help", action="store_true")
+args = parser.parse_args()
+
+def custom_help():
+    print("Required Arguments!!\n\t--bam [file.bam]\tOR\t--sam [file.sam]\n")
+    print("\t--html [file.html]\tAND/OR\t--out [myoutput.txt]\n")
+    print("\nOptional arguments:\n\t--overwrite:\t Add this if you want to overwrite a previously existing html directory"+
+    "\n\t--cutoff [int]\t Do not generate a report for a genome which has less than specified int number of reads mapped to it"+
+    "\n\t-v/--version\tCurrent weeSAM version number."+
+    "\n\t-h/--help\tShow this help script")
+
+if len(sys.argv) == 1 or args.help:
     print("""
               _)_
            .-'(/ '-.
@@ -74,9 +86,10 @@ if len(sys.argv) == 1:
           (ooO   Ooo)
 
 """)
-    print(parser.print_help())
+    custom_help()
     print(
 """
+Columns in table:
     Ref_Name:   The identifier of the reference.
     Ref_Len:    The length in bases of each reference.
     Mapped_Reads:   Number of reads mapped to each reference.
@@ -92,7 +105,6 @@ if len(sys.argv) == 1:
     Variation_Coefficient:  The mean of Std_Dev of the mean.
 """)
     exit(1)
-args = parser.parse_args()
 if args.version:
     print("weeSAM is currently on version number:\t1.5\n")
     exit(1)
