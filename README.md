@@ -1,4 +1,4 @@
-### _wee\_pysam_
+### _weeSAM_  
 ```  
               _)_
            .-'(/ '-.
@@ -23,17 +23,19 @@
 ``` 
 
 ### _usage:_ ### 
-``wee_sam.py { --bam file.bam OR --sam file.sam } --out output.txt `` 
+``weeSAM { --bam file.bam OR --sam file.sam } --out output.txt `` 
 
 
-_command line options:_   
+#### _command line options:_   ####  
 `--bam` : The input bam file. [file.bam]   
 `--sam` : The input sam file. [file.sam]   
 `--out` : The name of your output file. [myoutput.txt]     
-`--html`: Generate html for each coverage plot produced by the script. [file.html]     
-`-h`    : Help  
+`--html`: Generate html for each coverage plot produced by the script. [file.html]      
+`--overwrite`	: Add this flag to overwrite a html directory from a previous run.
+`-h`    : Help   
+`-v`	: weeSAM version number.
 
-_File output fields:_  
+#### _File output fields:_  ####  
 `Ref_Name` : The identifier of the reference.  
 `Ref_Len` : The length in bases of each reference.  
 `Mapped_Reads` : Number of reads mapped to each reference.  
