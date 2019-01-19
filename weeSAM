@@ -55,6 +55,7 @@ parser.add_argument("--sam", help="The input SAM file.\n")
 parser.add_argument("--bam", help="The input BAM file.\n")
 parser.add_argument("--cutoff", help="Cut off value for number of mapped reads. [Default = 0]\n")
 parser.add_argument("--overwrite", help="Overwrite the html directory if it already exists.\n", action="store_true")
+parser.add_argument("--mapped", help="Produce a bam file with only mapped reads and use this for analysis.", action="store_true")
 parser.add_argument("--out", help="Output file name.\n\tProduced file is a tab delimited .txt file "+
                     "which contains the information seen down below\n")
 parser.add_argument("-v", "--version", help="weeSAM version number", action="store_true")
@@ -195,6 +196,13 @@ if args.bam:
 
 def process_bam(f_list):
     for args.bam in f_list:
+        #Code to filter bam file for only mapped reads.
+        if args.mapped:
+            print(pysam.view('-h', '-F', '4',  args.bam), file=open('tmp_mapped.sam', 'w'), end='')
+            pysam.sort('-o', args.bam.rsplit('.')[0]+'_mapped.bam', 'tmp_mapped.sam')
+            os.remove('tmp_mapped.sam')
+            args.bam = args.bam.rsplit('.')[0] + '_mapped.bam'
+
         if args.bam.endswith('.sam'):
             print('You specified --bam but you supplied a .sam file.')
             exit(1)
