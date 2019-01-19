@@ -32,6 +32,7 @@
 `--out` : The name of your output file. [myoutput.txt]     
 `--html`: Generate html for each coverage plot produced by the script. [file.html]      
 `--overwrite`	: Add this flag to overwrite a html directory from a previous run.
+`--mapped`    : Add to generate and analyse a new bam file with only mapped reads.
 `-h`    : Print help function.   
 `-v`	: weeSAM version number.
 
