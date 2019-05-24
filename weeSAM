@@ -25,6 +25,10 @@
 #   18/1
 #'  -  Checks if user supplied a sam file when speccifying --bam
 #   - Deals with slashes and spaces in sequence name
+#   
+#   24/05/2019 - Matej Vucak Update 1
+#   - Added colour-intensity histogram plot
+#   - Fixed bug where genome positions with a depth of 0 were being ommitted from the plot
 #####################################################################################
 
 # Import packages
@@ -34,11 +38,16 @@ import pysam
 import os
 import csv
 import statistics
+from math import log, ceil
 import matplotlib
 import shutil
 import sys
+import seaborn as sb 
+import numpy as np 
 matplotlib.use('agg')
 from matplotlib import pyplot as plt
+from matplotlib import colors
+
 
 
 #'''
@@ -242,13 +251,15 @@ def process_bam(f_list):
         print("Total # Reads:\t"+str(int(total_mapped)+int(total_unmapped)))
 
         #'''
-        # samtools depth the bam file for coverage statistics.
+        # samtools depth the bam file for coverage statistics, including positions with 0 depth.
         #'''
         print("Generating a depth file, this may take a while.")
-        print(pysam.depth("-d", "1000000", args.bam), end="", file=open("tmp_depth.txt", "w"))
-
+        print(pysam.depth("-d", "1000000", "-a", args.bam), end="", file=open("tmp_depth.txt", "w"))
         #'''
-        # Open the file read the lines, store as a list close the file.
+        # Opens SAM depth file and stores the data in a dictionary.
+        # Each key in the dictionary corresponds to a single contig from the alignment file.
+        # Each key points to a list of depths at each position in the genome. 
+        # List index corresponds to position in genome + 1. e.g. element [100] in list is depth at position 101 in genome
         #'''
         min_dict = {}
         with open("tmp_depth.txt", "r") as f:
@@ -257,7 +268,6 @@ def process_bam(f_list):
                 key = min_dict.setdefault(line[0],[])
                 key.append(int(line[2]))
             f.close()
-
 
         # Remove the temp file
         os.remove("tmp_depth.txt")
@@ -318,6 +328,7 @@ def process_bam(f_list):
 
         # '''
         # A function which plots a line graph based on an input list and a title. The funciton returns the plot.
+        # Zack's old line plot, currently not called.
         # '''
         def my_plot(lst, name):
             fig = plt.figure(figsize=(16, 6))
@@ -337,6 +348,57 @@ def process_bam(f_list):
             plt.title(name)
             plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=1,
                        ncol=3, mode="expand", borderaxespad=0.)
+            return fig
+
+
+        # Colours columns in a histogram plot according to their y value.
+        # fig: The histogram plot object.
+        # values: The y values of all the columns in the histogram.
+        def color_bins_by_intensity(fig, values, bins):
+            patches = fig.patches # Get columns.
+            intensity_ratios = values/values.max() # Get standardised values.
+            norm = colors.Normalize(intensity_ratios.min(), intensity_ratios.max()) # Function to normalise color value by standardised depth
+            
+            for intensity, patch in zip(intensity_ratios, patches):
+                color = matplotlib.cm.get_cmap("winter")(norm(intensity))
+                patch.set_facecolor(color)
+
+        # Plots a colour-coded coverage depth histogram for a given alignment.
+        # coverage_stats: A list of depths for each position in the genome, as output by samtools depth -a. List index corresponds to position in genome.
+        # name: Contig name. Used to retrieve average depth from avg_dict and as plot title.
+        def plot_coverage_histogram(coverage_stats, name):
+            # Calculate bin size for histogram based on length of genome alignment. 
+            # 0-10^4: 1; 10^4-10^5: 10; 10^5-10^6: 100 etc.
+            temp = len(coverage_stats)/10000
+            exp = ceil(log(temp, 10)) # Get highest exponent as whole number.
+            bin_size = 10**exp
+
+            plt.figure(figsize=(30,5))
+
+            # Create lists to plot lines at 0.2*average, average and 1.8*average depth.
+            point_2 = len(coverage_stats) * [int(avg_dict[name]*0.2)]
+            one_eight = len(coverage_stats) * [int(avg_dict[name]*1.8)]
+            avg = len(coverage_stats) * [int(avg_dict[name])]
+
+            # Create and plot histogram in seaborn. hist_kws passed onto matplotlib are crucial: remove edge colours and
+            # change y value for each Position from frequency (would always be 1) to the depth value.
+            ax = sb.distplot(a=range(0, len(coverage_stats)), hist_kws={"weights":[x/bin_size for x in coverage_stats], "edgecolor":"k", "linewidth":0, "color":["r"]},
+            kde=False, bins=np.arange(0,len(coverage_stats), bin_size))
+
+            # Create separate numpy histogram to obtain y-values and bins. This histogram is not plotted. Necessary due to quirk of seaborn distplot, if we want color-intensiy.
+            values, bins = np.histogram(a=range(0, len(coverage_stats)), weights = [x/bin_size for x in coverage_stats], bins = np.arange(0, len(coverage_stats), bin_size))
+
+            # Plot horizontal lines representing depth statistics (average, 0.2*average, 1.8*average)
+            plt.plot(point_2,linestyle="--", label="Average depth * 0.2")
+            plt.plot(avg, linestyle="--", label="Average depth")
+            plt.plot(one_eight,linestyle="--", label="Average depth * 1.8")
+
+            fig = ax.get_figure()
+
+            color_bins_by_intensity(ax, values, bins) # Colour columns
+
+            sb.despine() # Remove top and right axes.
+            ax.set(xlabel="Position in Genome", title=name+"\nDepth of Coverage Along Genome (1 column=" + str(bin_size) +" bases)", ylabel = "Depth")
             return fig
 
         #'''
@@ -580,7 +642,7 @@ return "" + String(y) + "" + String(m) + "" + String(d) + "";
             #If html has been specified make plots and save them in the new html dir which was created.
             #'''
             if args.html:
-                fig = my_plot(min_dict[i], i)
+                fig = plot_coverage_histogram(min_dict[i], i)
                 fig.savefig(str(save_path)+ str(ref_name) + '.svg', format='svg')
 
                 # The html string for the 'index' html. Which contains links to the other html files
@@ -717,9 +779,6 @@ return "" + String(y) + "" + String(m) + "" + String(d) + "";
     else:
         if not args.out:
             print("\t</tbdody>\n</table>\n</body>\n</html>", file=html_file)
-
-
-
 
 
 if args.bam:
