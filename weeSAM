@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 #'''
+# weeSAMv1.6 replaces the coverage line plot with a colour-coded histogram and
+# fixes a bug where positions with 0 depth were being omitted from the coverage plot
+#
 #weeSAMv1.5 is a python (pysam) re-write of weeSAM written by Joseph Hughes with
 #some additional functionality.
 #
@@ -131,7 +134,7 @@ Columns in table:
 # #
 
 if args.version:
-    print("weeSAM is currently on version number:\t1.5\n")
+    print("weeSAM is currently on version number:\t1.6\n")
     exit(1)
 
 #'''
