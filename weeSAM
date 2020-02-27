@@ -32,6 +32,10 @@
 #   24/05/2019 - Matej Vucak Update 1
 #   - Added colour-intensity histogram plot
 #   - Fixed bug where genome positions with a depth of 0 were being ommitted from the plot
+#   
+#   27/02/2020 - Matej Vucak Update 2
+#   - Fixed bug where the Breadth and % Covered statistics were counting 0-depth sites.
+#   - Added --pretty option to output coloured histogram of coverage. Default is now the old line plot.
 #####################################################################################
 
 # Import packages
@@ -73,6 +77,7 @@ parser.add_argument("--out", help="Output file name.\n\tProduced file is a tab d
 parser.add_argument("-v", "--version", help="weeSAM version number", action="store_true")
 parser.add_argument("--html", help="What you want the html file to be called. (.html)\n\t"+
                     "Produces html pages with links to images containing coverage plots for each sequence.")
+parser.add_argument("--pretty", action = "store_true",  help = "Create a coloured histogram of sequence coverage instead of default line graph.")
 parser.add_argument("-h","--help", action="store_true")
 args = parser.parse_args()
 
@@ -646,7 +651,10 @@ return "" + String(y) + "" + String(m) + "" + String(d) + "";
             #If html has been specified make plots and save them in the new html dir which was created.
             #'''
             if args.html:
-                fig = plot_coverage_histogram(min_dict[i], i)
+                if args.pretty:
+                    fig = plot_coverage_histogram(min_dict[i], i)
+                else:
+                    fig = my_plot(min_dict[i], i)
                 fig.savefig(str(save_path)+ str(ref_name) + '.svg', format='svg')
 
                 # The html string for the 'index' html. Which contains links to the other html files
