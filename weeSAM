@@ -298,8 +298,9 @@ def process_bam(f_list):
             for j in min_dict[i]:
                 # Get the total number of sites into a dict. You can then compare how many elements in this
                 # dict against the ref len to get percent coverage
-                percent_key = percent_dict.setdefault(i, [])
-                percent_key.append(1)
+                if j > 0:
+                    percent_key = percent_dict.setdefault(i, [])
+                    percent_key.append(1)
                 # If the criteria is met make the dict value a list, and append 1 to the dict value
                 if j > float(avg_dict[i] * 1.8):
                     key = eighteen_dict.setdefault(i, [])
