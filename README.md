@@ -52,3 +52,26 @@
 `Variation_Coefficient` : The mean of Std_Dev of the mean.  
 
 
+### Installation
+
+You will need `pysam` and `seaborn` to run weeSAM.
+
+For easy installation of these:
+
+``pip install pysam``
+
+and 
+
+``pip install seaborn``
+
+Then clone the repo:
+
+``git clone git@github.com:centre-for-virus-research/weeSAM.git``
+
+Then, weeSAM should work by providing the path to the python script, for example from within repo directory e.g:
+
+``./weeSAM -h``
+
+
+
+ 
