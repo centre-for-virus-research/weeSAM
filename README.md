@@ -66,7 +66,7 @@ and
 
 Then clone the repo:
 
-``git clone git@github.com:centre-for-virus-research/weeSAM.git``
+``git clone https://github.com/centre-for-virus-research/weeSAM.git ``
 
 Then, weeSAM should work by providing the path to the python script, for example from within repo directory e.g:
 
